@@ -410,7 +410,19 @@
                 <iframe src="https://www.youtube.com/embed/${ytTrailer.key}" allowfullscreen></iframe>
               </div>
             `;
-          }
+          }        // DailyMotion Custom Video Section (YouTube trailer-ku keela varum)
+        let dailyMotionHtml = `
+          <div class="video-section">
+            <h3 style="color: #38bdf8; margin-bottom: 15px;">📺 DailyMotion Review Video</h3>
+            <iframe src="https://youtu.be/QcRoGeu1WKg" 
+              width="100%" 
+              height="480" 
+              frameborder="0" 
+              allowfullscreen>
+            </iframe>
+          </div>
+        `;
+
         }
 
         document.getElementById("detailCard").innerHTML = `

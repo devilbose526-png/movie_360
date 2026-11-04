@@ -317,15 +317,20 @@
       const videoUrl = `https://api.themoviedb.org/3/movie/${id}/videos?api_key=${API_KEY}`;
 
       try {
-        const [movieRes, creditsRes, videoRes] = await Promise.all([
-          fetch(movieUrl),
-          fetch(creditsRes),
-          fetch(videoUrl)
-        ]);
-        
+        const movieRes = await fetch(movieUrl);
         const movie = await movieRes.json();
-        const credits = await creditsRes.json();
-        const videoData = await videoRes.json();
+
+        let credits = { cast: [], crew: [] };
+        try {
+          const creditsRes = await fetch(creditsUrl);
+          credits = await creditsRes.json();
+        } catch (e) { console.error("Credits error:", e); }
+
+        let videoData = { results: [] };
+        try {
+          const videoRes = await fetch(videoUrl);
+          videoData = await videoRes.json();
+        } catch (e) { console.error("Video error:", e); }
 
         const poster = movie.poster_path 
           ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 

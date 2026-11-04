@@ -1,6 +1,5 @@
-
 <!DOCTYPE html>
-<html lang="ta">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -69,6 +68,12 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       display: flex;
       flex-direction: column;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .movie-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(225, 29, 72, 0.3);
     }
     .movie-card img {
       width: 100%;
@@ -86,6 +91,56 @@
     .movie-rating { color: #f59e0b; font-weight: bold; margin-bottom: 10px; }
     .movie-overview { font-size: 0.85rem; color: var(--subtext); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
     .status-text { text-align: center; color: var(--subtext); margin-top: 20px; }
+
+    /* Modal Popup Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .modal-content {
+      background-color: #1e293b;
+      border-radius: 12px;
+      max-width: 700px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: row;
+      position: relative;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .modal-img {
+      width: 40%;
+      object-fit: cover;
+      border-radius: 12px 0 0 12px;
+    }
+    .modal-details {
+      padding: 25px;
+      width: 60%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 28px;
+      color: #fff;
+      cursor: pointer;
+    }
+    @media (max-width: 600px) {
+      .modal-content { flex-direction: column; }
+      .modal-img { width: 100%; height: 250px; }
+      .modal-details { width: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -103,14 +158,28 @@
   <div id="status" class="status-text">Popular Trending Movies:</div>
   <div class="movies-grid" id="moviesGrid"></div>
 
+  <!-- Movie Details Popup Modal -->
+  <div class="modal-overlay" id="movieModal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+      <img id="modalPoster" class="modal-img" src="" alt="Movie Poster">
+      <div class="modal-details">
+        <h2 id="modalTitle" style="margin: 0; color: var(--accent-color);"></h2>
+        <div id="modalRating" style="color: #f59e0b; font-weight: bold;"></div>
+        <div id="modalRelease" style="color: var(--subtext); font-size: 0.9rem;"></div>
+        <p id="modalOverview" style="line-height: 1.6; color: #cbd5e1;"></p>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ⚠️ REPLACE WITH YOUR ACTUAL TMDB API KEY ⚠️
     const API_KEY = "9e9bb5d73d0a4ef2827da19c4c1643d2";
+    let currentMoviesList = [];
 
-    // Load Trending Movies on Page Load
     document.addEventListener("DOMContentLoaded", () => {
-      if(API_KEY === "YOUR_TMDB_API_KEY_HERE") {
-        document.getElementById("status").innerText = "⚠️ Please add your TMDB API Key in index.html line 165 to fetch live data!";
+      if(API_KEY === "9e9bb5d73d0a4ef2827da19c4c1643d2") {
+        document.getElementById("status").innerText = "⚠️ Please add your TMDB API Key in index.html to fetch live data!";
         return;
       }
       fetchTrendingMovies();
@@ -121,7 +190,8 @@
       try {
         const res = await fetch(url);
         const data = await res.json();
-        displayMovies(data.results);
+        currentMoviesList = data.results;
+        displayMovies(currentMoviesList);
       } catch (err) {
         console.error(err);
       }
@@ -133,7 +203,7 @@
 
       document.getElementById("status").innerText = `Searching results for: "${query}"...`;
       const url = `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}`;
-     
+      
       try {
         const res = await fetch(url);
         const data = await res.json();
@@ -142,7 +212,8 @@
           document.getElementById("moviesGrid").innerHTML = "";
         } else {
           document.getElementById("status").innerText = `Search results for: "${query}"`;
-          displayMovies(data.results);
+          currentMoviesList = data.results;
+          displayMovies(currentMoviesList);
         }
       } catch (err) {
         console.error(err);
@@ -154,13 +225,14 @@
       const grid = document.getElementById("moviesGrid");
       grid.innerHTML = "";
 
-      movies.forEach(movie => {
-        const poster = movie.poster_path
-          ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+      movies.forEach((movie, index) => {
+        const poster = movie.poster_path 
+          ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
           : 'https://via.placeholder.com/500x750?text=No+Poster';
 
         const card = document.createElement("div");
         card.className = "movie-card";
+        card.onclick = () => openModal(index);
         card.innerHTML = `
           <img src="${poster}" alt="${movie.title}">
           <div class="movie-info">
@@ -174,8 +246,32 @@
         grid.appendChild(card);
       });
     }
+
+    function openModal(index) {
+      const movie = currentMoviesList[index];
+      const poster = movie.poster_path 
+        ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
+        : 'https://via.placeholder.com/500x750?text=No+Poster';
+
+      document.getElementById("modalPoster").src = poster;
+      document.getElementById("modalTitle").innerText = movie.title;
+      document.getElementById("modalRating").innerText = `⭐ Rating: ${movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'} / 10 (${movie.vote_count} votes)`;
+      document.getElementById("modalRelease").innerText = `📅 Release Date: ${movie.release_date || 'Unknown'}`;
+      document.getElementById("modalOverview").innerText = movie.overview || 'No description available.';
+
+      document.getElementById("movieModal").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("movieModal").style.display = "none";
+    }
+
+    window.onclick = function(event) {
+      const modal = document.getElementById("movieModal");
+      if (event.target === modal) {
+        closeModal();
+      }
+    }
   </script>
 </body>
 </html>
-
- 

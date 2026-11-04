@@ -222,7 +222,21 @@
 
   <script>
     const API_KEY = "9e9bb5d73d0a4ef2827da19c4c1643d2";
-    const MY_REVIEWED_MOVIE_IDS = [569094, 634649, 872585, 939243];
+    
+    // 🎬 OPTION 2: Ovvoru movie-kum ungaloda Custom YouTube Review Video ID-ai inga connect pannikalam!
+    // Format: TMDB_MOVIE_ID: "YouTube_Video_ID"
+    const MY_REVIEW_VIDEOS = {
+      569094: "dQw4w9WgXcQ", // Example ID 1
+      1234139: "FW_PPcr1sPE",            // Video illai endral blank-ah vidalam (Official trailer mattum varum)
+      1473354: "0luH4WzAE8A",
+      504437: "mqA5T-s8tAw",
+      564147:"E0aPg9S1OcA",
+      587412:"tLeTx5OdjZs",
+      1560520:"90HAqMk7qv0"
+    };
+
+    // Home page-il kaatt வேண்டிய movies-oda TMDB IDs list
+    const MY_REVIEWED_MOVIE_IDS = [569094,1234139,1473354,504437,564147,587412,1560520];
     let currentMoviesList = [];
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -372,7 +386,19 @@
           `;
         }
 
-        // YouTube Trailer
+        // Custom Review Video Check (Option 2 iframe integration)
+        let customReviewHtml = "";
+        const customVideoId = MY_REVIEW_VIDEOS[id];
+        if (customVideoId) {
+          customReviewHtml = `
+            <div class="video-section">
+              <h3 style="color: #f59e0b; margin-bottom: 15px;">🎙️ CineTamil Exclusive Review</h3>
+              <iframe src="https://www.youtube.com/embed/${customVideoId}" allowfullscreen></iframe>
+            </div>
+          `;
+        }
+
+        // YouTube Official Trailer
         let trailerHtml = "";
         if (videoData.results && videoData.results.length > 0) {
           const ytTrailer = videoData.results.find(v => v.site === "YouTube" && (v.type === "Trailer" || v.type === "Teaser"));
@@ -413,6 +439,7 @@
           </div>
 
           ${castHtml}
+          ${customReviewHtml}
           ${trailerHtml}
         `;
       } catch (err) {

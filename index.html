@@ -93,47 +93,96 @@
     .movie-overview { font-size: 0.85rem; color: var(--subtext); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
     .status-text { text-align: center; color: var(--subtext); margin-top: 20px; }
 
-    /* Detail Page View */
-    .detail-container {
-      max-width: 1000px;
-      margin: 30px auto;
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 30px;
-      display: flex;
-      flex-direction: column;
-      gap: 30px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    /* TMDB Style Hero Detail Page */
+    .hero-banner {
+      position: relative;
+      background-size: cover;
+      background-position: center;
+      padding: 50px 20px;
+      color: #fff;
     }
-    .detail-top {
-      display: flex;
-      gap: 30px;
+    .hero-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.90);
+      z-index: 1;
     }
-    .detail-poster {
-      width: 320px;
-      height: 460px;
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      gap: 40px;
+      align-items: center;
+    }
+    .hero-poster {
+      width: 300px;
+      height: 450px;
       object-fit: cover;
-      border-radius: 8px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
     }
-    .detail-info {
+    .hero-details {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 15px;
     }
-    .trailer-container {
-      width: 100%;
-      margin-top: 20px;
+    .score-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 55px; height: 55px;
+      background: #020617;
+      border: 4px solid #22c55e;
+      border-radius: 50%;
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: #fff;
     }
-    .trailer-container iframe {
-      width: 100%;
-      height: 450px;
+    .cast-section {
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+    .cast-scroll {
+      display: flex;
+      gap: 15px;
+      overflow-x: auto;
+      padding-bottom: 15px;
+    }
+    .cast-card {
+      background: var(--card-bg);
       border-radius: 8px;
+      min-width: 140px;
+      max-width: 140px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      flex-shrink: 0;
+    }
+    .cast-card img {
+      width: 100%;
+      height: 175px;
+      object-fit: cover;
+    }
+    .cast-info {
+      padding: 10px;
+    }
+    .video-section {
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+    .video-section iframe {
+      width: 100%;
+      height: 480px;
+      border-radius: 12px;
       border: none;
     }
     .back-btn {
       display: inline-block;
-      margin: 20px 0 0 20px;
+      margin: 20px;
       padding: 8px 16px;
       background: #334155;
       color: #fff;
@@ -143,9 +192,9 @@
     .back-btn:hover { background: #475569; }
 
     @media (max-width: 768px) {
-      .detail-top { flex-direction: column; align-items: center; }
-      .detail-poster { width: 100%; height: 380px; }
-      .trailer-container iframe { height: 250px; }
+      .hero-content { flex-direction: column; align-items: center; text-align: center; }
+      .hero-poster { width: 220px; height: 330px; }
+      .video-section iframe { height: 260px; }
     }
   </style>
 </head>
@@ -153,26 +202,27 @@
 
   <header onclick="window.location.href='index.html'">
     <h1>🎬 CineTamil Review Hub</h1>
-    <p style="color: var(--subtext); margin-top: 5px;">Search any movie globally using TMDB API</p>
+    <p style="color: var(--subtext); margin-top: 5px;">My Personal Movie Reviews & Global Search</p>
   </header>
 
   <div id="mainContent">
     <div class="search-container">
-      <input type="text" id="searchInput" placeholder="Enter movie name (e.g., Leo, Jailer, Avatar)...">
+      <input type="text" id="searchInput" placeholder="Search any movie globally (e.g., Leo, Jailer)...">
       <button onclick="searchMovies()">Search</button>
     </div>
 
-    <div id="status" class="status-text">Popular Trending Movies:</div>
+    <div id="status" class="status-text">My Reviewed Movies:</div>
     <div class="movies-grid" id="moviesGrid"></div>
   </div>
 
   <div id="detailView" style="display: none;">
     <a href="index.html" class="back-btn">⬅ Back to Home</a>
-    <div class="detail-container" id="detailCard"></div>
+    <div id="detailCard"></div>
   </div>
 
   <script>
     const API_KEY = "9e9bb5d73d0a4ef2827da19c4c1643d2";
+    const MY_REVIEWED_MOVIE_IDS = [569094, 634649, 872585, 939243];
     let currentMoviesList = [];
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -182,27 +232,35 @@
       if (movieId) {
         fetchMovieDetails(movieId);
       } else {
-        fetchTrendingMovies();
+        fetchMyReviewedMovies();
       }
     });
 
-    async function fetchTrendingMovies() {
-      const url = `https://api.themoviedb.org/3/trending/movie/week?api_key=${API_KEY}`;
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        currentMoviesList = data.results;
-        displayMovies(currentMoviesList);
-      } catch (err) {
-        console.error(err);
+    async function fetchMyReviewedMovies() {
+      const grid = document.getElementById("moviesGrid");
+      grid.innerHTML = "";
+      currentMoviesList = [];
+
+      for (let id of MY_REVIEWED_MOVIE_IDS) {
+        try {
+          const res = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}`);
+          const movie = await res.json();
+          if (movie && movie.id) {
+            currentMoviesList.push(movie);
+          }
+        } catch (err) {
+          console.error("Error fetching movie id:", id);
+        }
       }
+
+      displayMovies(currentMoviesList);
     }
 
     async function searchMovies() {
       const query = document.getElementById("searchInput").value.trim();
       if (!query) return;
 
-      document.getElementById("status").innerText = `Searching results for: "${query}"...`;
+      document.getElementById("status").innerText = `Search results for: "${query}"...`;
       const url = `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}`;
       
       try {
@@ -226,7 +284,6 @@
       const grid = document.getElementById("moviesGrid");
       grid.innerHTML = "";
 
-      movies.items = movies;
       movies.forEach((movie) => {
         const poster = movie.poster_path 
           ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
@@ -256,29 +313,68 @@
       document.getElementById("detailView").style.display = "block";
 
       const movieUrl = `https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}`;
+      const creditsUrl = `https://api.themoviedb.org/3/movie/${id}/credits?api_key=${API_KEY}`;
       const videoUrl = `https://api.themoviedb.org/3/movie/${id}/videos?api_key=${API_KEY}`;
 
       try {
-        const [movieRes, videoRes] = await Promise.all([
+        const [movieRes, creditsRes, videoRes] = await Promise.all([
           fetch(movieUrl),
+          fetch(creditsRes),
           fetch(videoUrl)
         ]);
         
         const movie = await movieRes.json();
+        const credits = await creditsRes.json();
         const videoData = await videoRes.json();
 
         const poster = movie.poster_path 
           ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
           : 'https://via.placeholder.com/500x750?text=No+Poster';
 
-        // Find YouTube Trailer
-        let trailerHtml = "<p style='color: var(--subtext);'>No trailer available for this movie.</p>";
+        const backdrop = movie.backdrop_path 
+          ? `https://image.tmdb.org/t/p/original${movie.backdrop_path}` 
+          : poster;
+
+        const userScore = movie.vote_average ? Math.round(movie.vote_average * 10) : 0;
+
+        // Director
+        const director = credits.crew ? credits.crew.find(person => person.job === "Director") : null;
+
+        // Top Billed Cast
+        let castHtml = "";
+        if (credits.cast && credits.cast.length > 0) {
+          const topCast = credits.cast.slice(0, 10);
+          castHtml = `
+            <div class="cast-section">
+              <h3 style="color: #fff; margin-bottom: 15px;">Top Billed Cast</h3>
+              <div class="cast-scroll">
+                ${topCast.map(actor => {
+                  const actorImg = actor.profile_path 
+                    ? `https://image.tmdb.org/t/p/w200${actor.profile_path}` 
+                    : 'https://via.placeholder.com/200x300?text=No+Image';
+                  return `
+                    <div class="cast-card">
+                      <img src="${actorImg}" alt="${actor.name}">
+                      <div class="cast-info">
+                        <div style="font-weight: bold; font-size: 0.9rem; color: #fff;">${actor.name}</div>
+                        <div style="font-size: 0.75rem; color: var(--subtext);">${actor.character || ''}</div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        // YouTube Trailer
+        let trailerHtml = "";
         if (videoData.results && videoData.results.length > 0) {
           const ytTrailer = videoData.results.find(v => v.site === "YouTube" && (v.type === "Trailer" || v.type === "Teaser"));
           if (ytTrailer) {
             trailerHtml = `
-              <h3 style="color: var(--accent-color); margin-bottom: 10px;">🎥 Official Trailer</h3>
-              <div class="trailer-container">
+              <div class="video-section">
+                <h3 style="color: var(--accent-color); margin-bottom: 15px;">🎥 Official Trailer</h3>
                 <iframe src="https://www.youtube.com/embed/${ytTrailer.key}" allowfullscreen></iframe>
               </div>
             `;
@@ -286,22 +382,37 @@
         }
 
         document.getElementById("detailCard").innerHTML = `
-          <div class="detail-top">
-            <img src="${poster}" class="detail-poster" alt="${movie.title}">
-            <div class="detail-info">
-              <h2 style="margin: 0; color: var(--accent-color); font-size: 2rem;">${movie.title}</h2>
-              <div style="color: var(--subtext); font-style: italic;">${movie.tagline || ''}</div>
-              <div style="color: #f59e0b; font-weight: bold; font-size: 1.1rem;">⭐ Rating: ${movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'} / 10 (${movie.vote_count} votes)</div>
-              <div style="color: var(--subtext);">📅 Release Date: ${movie.release_date || 'Unknown'}</div>
-              <div style="color: var(--subtext);">⏳ Runtime: ${movie.runtime ? movie.runtime + ' mins' : 'N/A'}</div>
-              <p style="line-height: 1.6; color: #cbd5e1; font-size: 1rem; margin-top: 5px;">${movie.overview || 'No description available.'}</p>
+          <div class="hero-banner" style="background-image: url('${backdrop}');">
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+              <img src="${poster}" class="hero-poster" alt="${movie.title}">
+              <div class="hero-details">
+                <h2 style="margin: 0; color: #fff; font-size: 2.2rem;">${movie.title} <span style="font-weight: normal; color: var(--subtext);">(${movie.release_date ? movie.release_date.split('-')[0] : ''})</span></h2>
+                <div style="color: var(--subtext); font-style: italic;">${movie.tagline || ''}</div>
+                
+                <div style="display: flex; align-items: center; gap: 15px; margin: 10px 0;">
+                  <div class="score-badge">${userScore}%</div>
+                  <span style="font-weight: bold; font-size: 1rem;">User Score</span>
+                </div>
+
+                <div style="color: var(--subtext); font-size: 0.95rem;">
+                  📅 Release: ${movie.release_date || 'N/A'} &nbsp;|&nbsp; ⏳ Runtime: ${movie.runtime ? movie.runtime + ' mins' : 'N/A'}
+                </div>
+
+                <h3 style="margin: 5px 0 0 0; color: #fff;">Overview</h3>
+                <p style="line-height: 1.5; color: #cbd5e1; font-size: 0.95rem; margin: 0;">${movie.overview || 'No description available.'}</p>
+                
+                ${director ? `<div style="margin-top: 10px;"><strong style="color: #fff;">${director.name}</strong><br><span style="font-size: 0.85rem; color: var(--subtext);">Director, Writer</span></div>` : ''}
+              </div>
             </div>
           </div>
+
+          ${castHtml}
           ${trailerHtml}
         `;
       } catch (err) {
         console.error(err);
-        document.getElementById("detailCard").innerHTML = "<p>Error loading movie details.</p>";
+        document.getElementById("detailCard").innerHTML = "<p style='text-align:center; padding: 50px;'>Error loading movie details.</p>";
       }
     }
   </script>

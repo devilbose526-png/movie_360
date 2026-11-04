@@ -223,21 +223,32 @@
   <script>
     const API_KEY = "9e9bb5d73d0a4ef2827da19c4c1643d2";
     
-    // 🎬 OPTION 2: Ovvoru movie-kum ungaloda Custom YouTube Review Video ID-ai inga connect pannikalam!
-    // Format: TMDB_MOVIE_ID: "YouTube_Video_ID"
+    // 🎬 1. YouTube Review Videos (TMDB ID : "YouTube_Video_ID")
     const MY_REVIEW_VIDEOS = {
-      569094: "dQw4w9WgXcQ", // Example ID 1
-      1234139: "FW_PPcr1sPE",            // Video illai endral blank-ah vidalam (Official trailer mattum varum)
+      569094: "dQw4w9WgXcQ",
+      1234139: "FW_PPcr1sPE",
       1473354: "0luH4WzAE8A",
-      504437: "mqA5T-s8tAw",
-      564147: "E0aPg9S1OcA",
-      587412: "tLeTx5OdjZs",
+      504437: "mqA5-s8tAw",
+      564147: "E0aPg9S10Ca",
+      587412: "tLEtX50djZs",
       1560520: "90HAqMk7qv0",
       980431: "ByAn8DF8Ykk"
     };
 
+    // 📺 2. DailyMotion Review Videos (TMDB ID : "DailyMotion_Video_ID")
+    const MY_DAILYMOTION_VIDEOS = {
+      569094: "", // Inga ungaloda Dailymotion video ID-ai podalam (e.g., "x8m1234")
+      1234139: "",
+      1473354: "",
+      504437: "",
+      564147: "",
+      587412: "",
+      1560520: "",
+      980431: ""
+    };
+
     // Home page-il kaatt வேண்டிய movies-oda TMDB IDs list
-    const MY_REVIEWED_MOVIE_IDS = [569094, 1234139 ,1473354 ,504437 ,564147 ,587412 ,1560520 ,980431];
+    const MY_REVIEWED_MOVIE_IDS = [569094, 1234139, 1473354, 504437, 564147, 587412, 1560520, 980431];
     let currentMoviesList = [];
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -387,14 +398,26 @@
           `;
         }
 
-        // Custom Review Video Check (Option 2 iframe integration)
+        // Custom YouTube Review Video
         let customReviewHtml = "";
         const customVideoId = MY_REVIEW_VIDEOS[id];
         if (customVideoId) {
           customReviewHtml = `
             <div class="video-section">
-              <h3 style="color: #f59e0b; margin-bottom: 15px;">🎙️ CineTamil Exclusive Review</h3>
+              <h3 style="color: #f59e0b; margin-bottom: 15px;">🎙️ CineTamil Exclusive YouTube Review</h3>
               <iframe src="https://www.youtube.com/embed/${customVideoId}" allowfullscreen></iframe>
+            </div>
+          `;
+        }
+
+        // Custom DailyMotion Review Video
+        let dailyMotionHtml = "";
+        const dmVideoId = MY_DAILYMOTION_VIDEOS[id];
+        if (dmVideoId) {
+          dailyMotionHtml = `
+            <div class="video-section">
+              <h3 style="color: #38bdf8; margin-bottom: 15px;">📺 CineTamil DailyMotion Review</h3>
+              <iframe src="https://www.dailymotion.com/embed/video/${dmVideoId}" allowfullscreen></iframe>
             </div>
           `;
         }
@@ -410,19 +433,7 @@
                 <iframe src="https://www.youtube.com/embed/${ytTrailer.key}" allowfullscreen></iframe>
               </div>
             `;
-          }        // DailyMotion Custom Video Section (YouTube trailer-ku keela varum)
-        let dailyMotionHtml = `
-          <div class="video-section">
-            <h3 style="color: #38bdf8; margin-bottom: 15px;">📺 DailyMotion Review Video</h3>
-            <iframe src="https://www.youtube.com/watch?v=QcRoGeu1WKg" 
-              width="100%" 
-              height="480" 
-              frameborder="0" 
-              allowfullscreen>
-            </iframe>
-          </div>
-        `;
-
+          }
         }
 
         document.getElementById("detailCard").innerHTML = `
@@ -454,6 +465,7 @@
           ${castHtml}
           ${customReviewHtml}
           ${trailerHtml}
+          ${dailyMotionHtml}
         `;
       } catch (err) {
         console.error(err);

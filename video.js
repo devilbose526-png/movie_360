@@ -24,7 +24,7 @@
       1560520: [], 
       980431: [],
       1402181: [
-       "https://pixeldrain.com/api/file/6YsTpYuY",
+       "https://pixeldrain.com/u/6YsTpYuY?embed",
 
        "https://pixeldrain.com/api/file/p1Mt5TAu",
 

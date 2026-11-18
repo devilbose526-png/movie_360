@@ -511,20 +511,25 @@ function startBloggerTimer() {
     secondsLeft--;
     if (secondsLeft > 0) {
       if (timerText) timerText.innerText = `Unlocking video in ${secondsLeft}s... (Keep opened page active)`;
-    } else {
+       } else {
       clearInterval(countdownInterval);
       waitingForTimer = false;
       const overlay = document.getElementById("playOverlay");
-      const iframeEl = document.getElementById("multiPartIframe");
+      const videoEl = document.getElementById("multiPartVideo");
       if (overlay) overlay.style.display = "none";
-      if (iframeEl) {
+      if (videoEl) {
         const parts = getActivePixelParts();
         let fileUrl = parts[currentPartIndex];
-        let embedUrl = fileUrl.replace("/api/file/", "/u/") + "?embed";
-        iframeEl.src = embedUrl;
-        iframeEl.style.display = "block";
+        
+        // Fix: Pixeldrain direct stream link-ku query parameter add panni bypass panrom
+        const sourceEl = document.getElementById("videoSource");
+        sourceEl.src = fileUrl + "?download"; // or ?play
+        videoEl.load();
+        videoEl.style.display = "block";
+        videoEl.play().catch(e => console.log("Play error:", e));
       }
     }
+
   }, 1000);
 }
 </script>
